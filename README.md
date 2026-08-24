@@ -31,6 +31,14 @@ Porsche 生成器 `2.3.1` 在当前 Windows 与 Next.js 编译器组合下仍可
 
 生产构建会把页面实际引用的 Porsche Design System 字体、图标和元资源镜像到本站 `_vendor` 目录，并将 URL 改写为同源路径，避免访问网站时依赖公司网络可能无法连接的 Porsche CDN。
 
+## 品牌资产
+
+Logo、Icon、颜色与使用规则见 [`docs/brand/README.md`](docs/brand/README.md)。修改生成规则后运行：
+
+```powershell
+npm run brand:generate
+```
+
 ## 新增条目
 
 在 `radar/<发布日期>/` 下创建 Markdown 文件。文件名是不随版本变化的条目 ID，例如：

@@ -5,6 +5,14 @@
   "label": "Neutral",
   "supports": ["light", "dark"],
   "default": "light",
+  "headerLogoFile": {
+    "light": "header-logo-light.svg",
+    "dark": "header-logo-dark.svg"
+  },
+  "footerLogoFile": {
+    "light": "footer-logo-light.svg",
+    "dark": "footer-logo-dark.svg"
+  },
   "cssVariables": {
     "foreground": {
       "light": "#18181B",
@@ -15,8 +23,8 @@
       "dark": "#18181B"
     },
     "highlight": {
-      "light": "#2563EB",
-      "dark": "#60A5FA"
+      "light": "#315CF5",
+      "dark": "#7C9BFF"
     },
     "content": {
       "light": "#3F3F46",
@@ -27,8 +35,8 @@
       "dark": "#A1A1AA"
     },
     "link": {
-      "light": "#2563EB",
-      "dark": "#60A5FA"
+      "light": "#315CF5",
+      "dark": "#7C9BFF"
     },
     "border": {
       "light": "#E4E4E7",
@@ -62,8 +70,8 @@
       "dark": "#A1A1AA"
     },
     "tag": {
-      "light": "#2563EB",
-      "dark": "#60A5FA"
+      "light": "#315CF5",
+      "dark": "#7C9BFF"
     },
     "product": {
       "light": "#E11D48",

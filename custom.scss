@@ -1,1 +1,16 @@
-/* Use this file to optionally override global CSS styles. See README.md for examples. */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("/adoption-radar/fonts/manrope-latin-600-normal.woff2") format("woff2");
+}
+
+// The generated layout renders the title next to the theme-provided mark.
+// Keep this selector structural so it survives upstream CSS-module hashes.
+header a:has(> img) + a {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}

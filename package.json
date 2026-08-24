@@ -4,9 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "brand:generate": "node scripts/generate-brand-assets.mjs",
+    "brand:check": "node scripts/check-brand-assets.mjs",
     "dev": "techradar dev",
     "build": "techradar build && node scripts/self-host-pds-assets.mjs",
-    "validate": "techradar validate",
+    "validate": "npm run brand:check && techradar validate",
     "postinstall": "node scripts/patch-techradar-paths.mjs"
   },
   "dependencies": {
@@ -19,5 +21,10 @@
       "esbuild",
       "sharp"
     ]
+  },
+  "devDependencies": {
+    "@fontsource/manrope": "^5.3.0",
+    "@shuding/opentype.js": "^1.4.0-beta.0",
+    "sharp": "^0.35.3"
   }
 }

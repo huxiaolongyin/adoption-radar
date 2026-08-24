@@ -39,8 +39,31 @@ function isTextFile(path, contentType = "") {
   );
 }
 
+function localOverrideFor(remoteUrl) {
+  const pathname = new URL(remoteUrl).pathname;
+  if (!pathname.includes("/porsche-design-system/meta-icons/")) return null;
+  if (pathname.includes("/manifest")) return `${basePath}/site.webmanifest`;
+  if (pathname.includes("/og-image")) {
+    return `${basePath}/brand/adoption-radar-og.png`;
+  }
+  if (pathname.includes("/apple-touch-icon")) {
+    return `${basePath}/brand/adoption-radar-icon-192.png`;
+  }
+  if (pathname.includes("/mstile")) {
+    return `${basePath}/brand/adoption-radar-icon-512.png`;
+  }
+  if (pathname.endsWith(".ico")) return `${basePath}/favicon.ico`;
+  if (pathname.includes("/favicon-32x32")) {
+    return `${basePath}/brand/adoption-radar-icon-32.png`;
+  }
+  return null;
+}
+
 function localUrlFor(remoteUrl) {
-  return `${localCdnBase}${new URL(remoteUrl).pathname}`;
+  return (
+    localOverrideFor(remoteUrl) ??
+    `${localCdnBase}${new URL(remoteUrl).pathname}`
+  );
 }
 
 function localPathFor(remoteUrl) {
@@ -62,7 +85,9 @@ const pending = new Set();
 for (const path of buildFiles) {
   if (!isTextFile(path)) continue;
   const content = readFileSync(path, "utf8");
-  for (const url of content.match(remoteAssetPattern) ?? []) pending.add(url);
+  for (const url of content.match(remoteAssetPattern) ?? []) {
+    if (!localOverrideFor(url)) pending.add(url);
+  }
 }
 
 const downloaded = new Set();
@@ -86,7 +111,7 @@ while (pending.size > 0) {
       if (isTextFile(path, contentType)) {
         const content = bytes.toString("utf8");
         for (const url of content.match(remoteAssetPattern) ?? []) {
-          if (!downloaded.has(url)) pending.add(url);
+          if (!downloaded.has(url) && !localOverrideFor(url)) pending.add(url);
         }
         writeFileSync(path, replaceRemoteUrls(content), "utf8");
       } else {
