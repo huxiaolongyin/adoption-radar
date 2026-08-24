@@ -9,6 +9,11 @@
 ```powershell
 npm ci
 npm run validate
+```
+
+在 Linux 或 macOS 上启动本地开发服务：
+
+```powershell
 npm run dev
 ```
 
@@ -20,7 +25,9 @@ npm run build
 
 静态文件会生成到 `build/`。
 
-项目的 `postinstall` 脚本会为当前生成器版本应用一个幂等的 Windows 路径兼容修正；上游实现修复后，脚本会自动跳过。
+项目的 `postinstall` 脚本会为当前生成器版本应用一个幂等的 Windows 路径兼容修正，使内容校验可以在 Windows 上运行；上游实现修复后，脚本会自动跳过。
+
+Porsche 生成器 `2.3.1` 在当前 Windows 与 Next.js 编译器组合下仍可能无法完成本地开发或生产构建。Windows 上推荐运行 `npm run validate` 后推送，由 GitHub Actions 的 Ubuntu 环境完成生产构建和发布；需要本地预览时使用 WSL 或其他 Linux 环境。
 
 ## 新增条目
 
