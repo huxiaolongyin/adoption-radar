@@ -29,6 +29,8 @@ npm run build
 
 Porsche 生成器 `2.3.1` 在当前 Windows 与 Next.js 编译器组合下仍可能无法完成本地开发或生产构建。Windows 上推荐运行 `npm run validate` 后推送，由 GitHub Actions 的 Ubuntu 环境完成生产构建和发布；需要本地预览时使用 WSL 或其他 Linux 环境。
 
+生产构建会把页面实际引用的 Porsche Design System 字体、图标和元资源镜像到本站 `_vendor` 目录，并将 URL 改写为同源路径，避免访问网站时依赖公司网络可能无法连接的 Porsche CDN。
+
 ## 新增条目
 
 在 `radar/<发布日期>/` 下创建 Markdown 文件。文件名是不随版本变化的条目 ID，例如：

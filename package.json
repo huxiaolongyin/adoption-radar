@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "techradar dev",
-    "build": "techradar build",
+    "build": "techradar build && node scripts/self-host-pds-assets.mjs",
     "validate": "techradar validate",
     "postinstall": "node scripts/patch-techradar-paths.mjs"
   },
