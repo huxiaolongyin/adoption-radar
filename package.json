@@ -1,0 +1,23 @@
+{
+  "name": "adoption-radar",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "techradar dev",
+    "build": "techradar build",
+    "validate": "techradar validate",
+    "postinstall": "node scripts/patch-techradar-paths.mjs"
+  },
+  "dependencies": {
+    "@porscheofficial/porschedigital-technology-radar": "^2.3.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@porscheofficial/porschedigital-technology-radar",
+      "@parcel/watcher",
+      "esbuild",
+      "sharp"
+    ]
+  }
+}

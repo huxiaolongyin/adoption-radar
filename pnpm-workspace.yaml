@@ -1,0 +1,8 @@
+# pnpm v10.26+ reads build-script approvals from this file.
+# Approves the framework's postinstall plus the native addons Next.js needs.
+# There are no workspace member packages — this is a standalone project.
+allowBuilds:
+  "@porscheofficial/porschedigital-technology-radar": true
+  "@parcel/watcher": true
+  esbuild: true
+  sharp: true

@@ -1,0 +1,90 @@
+{
+  "basePath": "/adoption-radar",
+  "baseUrl": "https://huxiaolongyin.github.io",
+  "editUrl": "https://github.dev/huxiaolongyin/adoption-radar/blob/main/radar/{release}/{id}.md",
+  "defaultTheme": "neutral",
+  "toggles": {
+    "showSearch": true,
+    "showChart": true,
+    "showTagFilter": true,
+    "showProductFilter": false,
+    "showFilterOnSegmentPage": false,
+    "showTeamFilter": false,
+    "showBlipChange": true,
+    "showDemoDisclaimer": false,
+    "multiSelectFilters": true
+  },
+  "segments": [
+    {
+      "id": "knowledge",
+      "title": "知识",
+      "description": "值得持续理解、验证和更新的知识领域。"
+    },
+    {
+      "id": "skills",
+      "title": "技能",
+      "description": "能够通过实践形成并持续提升的个人或工程能力。"
+    },
+    {
+      "id": "tools",
+      "title": "工具",
+      "description": "用于提升效率、完成任务或支持工作流的软件与服务。"
+    },
+    {
+      "id": "resources",
+      "title": "资源",
+      "description": "值得保存、复用或持续关注的项目、内容与信息来源。"
+    }
+  ],
+  "rings": [
+    {
+      "id": "adopt",
+      "title": "采用",
+      "description": "已经验证，当前愿意默认使用。",
+      "radius": 0.5,
+      "strokeWidth": 5
+    },
+    {
+      "id": "trial",
+      "title": "试用",
+      "description": "正在真实场景中尝试并积累经验。",
+      "radius": 0.69,
+      "strokeWidth": 3
+    },
+    {
+      "id": "assess",
+      "title": "评估",
+      "description": "值得研究，但尚未投入实际使用。",
+      "radius": 0.85,
+      "strokeWidth": 2
+    },
+    {
+      "id": "hold",
+      "title": "暂缓",
+      "description": "当前不建议新增使用，已有使用逐步退出。",
+      "radius": 1,
+      "strokeWidth": 0.75
+    }
+  ],
+  "flags": {
+    "new": { "title": "新增" },
+    "changed": { "title": "已调整" },
+    "default": { "title": "未变化" }
+  },
+  "social": [
+    {
+      "href": "https://github.com/huxiaolongyin/adoption-radar",
+      "icon": "github"
+    }
+  ],
+  "labels": {
+    "title": "Adoption Radar",
+    "tagline": "记录当前值得采用、试用、评估或暂缓的选择。",
+    "footer": "由 Porsche Digital Technology Radar Generator 构建。",
+    "notUpdated": "该条目已连续三个版本未更新。",
+    "hiddenFromRadar": "该条目当前未显示在雷达图中。",
+    "searchPlaceholder": "搜索与操作",
+    "searchPlaceholderLong": "搜索条目，或输入 > 执行操作……",
+    "metaDescription": "Adoption Radar：个人知识、技能、工具与资源的最新采纳雷达。"
+  }
+}
