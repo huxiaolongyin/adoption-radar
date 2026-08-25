@@ -5,7 +5,8 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname, extname, join, resolve } from "node:path";
 
 const outputDirectory = join(process.cwd(), "build");
 const config = JSON.parse(readFileSync(join(process.cwd(), "config.json"), "utf8"));
@@ -13,6 +14,8 @@ const basePath = (config.basePath ?? "").replace(/\/$/, "");
 const localCdnBase = `${basePath}/_vendor`;
 const remoteAssetPattern =
   /https:\/\/cdn\.ui\.porsche\.(?:com|cn)\/porsche-design-system\/[^\s"'`()<>\\]+/g;
+const relativeAssetPattern =
+  /(["'`])((?:\.\.?\/|\/porsche-design-system\/)[^"'`\\\s?#]+\.(?:css|js|json|map|svg|woff2?|png|ico|webmanifest)(?:[?#][^"'`]*)?)\1/g;
 const textExtensions = new Set([
   ".css",
   ".html",
@@ -71,74 +74,106 @@ function localPathFor(remoteUrl) {
   return join(outputDirectory, "_vendor", ...pathname.split("/"));
 }
 
-function replaceRemoteUrls(content) {
-  return content.replace(remoteAssetPattern, (url) => localUrlFor(url));
-}
-
-if (!statSync(outputDirectory).isDirectory()) {
-  throw new Error(`Build output does not exist: ${outputDirectory}`);
-}
-
-const buildFiles = walk(outputDirectory);
-const pending = new Set();
-
-for (const path of buildFiles) {
-  if (!isTextFile(path)) continue;
-  const content = readFileSync(path, "utf8");
-  for (const url of content.match(remoteAssetPattern) ?? []) {
-    if (!localOverrideFor(url)) pending.add(url);
-  }
-}
-
-const downloaded = new Set();
-
-while (pending.size > 0) {
-  const batch = [...pending].filter((url) => !downloaded.has(url));
-  pending.clear();
-
-  await Promise.all(
-    batch.map(async (remoteUrl) => {
-      const response = await fetch(remoteUrl);
-      if (!response.ok) {
-        throw new Error(`Unable to download ${remoteUrl}: HTTP ${response.status}`);
-      }
-
-      const path = localPathFor(remoteUrl);
-      const contentType = response.headers.get("content-type") ?? "";
-      const bytes = Buffer.from(await response.arrayBuffer());
-      mkdirSync(dirname(path), { recursive: true });
-
-      if (isTextFile(path, contentType)) {
-        const content = bytes.toString("utf8");
-        for (const url of content.match(remoteAssetPattern) ?? []) {
-          if (!downloaded.has(url) && !localOverrideFor(url)) pending.add(url);
-        }
-        writeFileSync(path, replaceRemoteUrls(content), "utf8");
-      } else {
-        writeFileSync(path, bytes);
-      }
-
-      downloaded.add(remoteUrl);
-    })
+function isPorscheAssetUrl(url) {
+  return (
+    /^cdn\.ui\.porsche\.(?:com|cn)$/.test(url.hostname) &&
+    url.pathname.startsWith("/porsche-design-system/")
   );
 }
 
-for (const path of buildFiles) {
-  if (!isTextFile(path)) continue;
-  const content = readFileSync(path, "utf8");
-  writeFileSync(path, replaceRemoteUrls(content), "utf8");
+export function referencedRemoteUrls(content, sourceUrl) {
+  const urls = new Set(content.match(remoteAssetPattern) ?? []);
+  if (!sourceUrl) return urls;
+
+  const matches = content.matchAll(
+    new RegExp(relativeAssetPattern.source, relativeAssetPattern.flags)
+  );
+  for (const match of matches) {
+    const resolved = new URL(match[2], sourceUrl);
+    if (isPorscheAssetUrl(resolved)) urls.add(resolved.href);
+  }
+  return urls;
 }
 
-const remaining = walk(outputDirectory).filter((path) => {
-  if (!isTextFile(path)) return false;
-  remoteAssetPattern.lastIndex = 0;
-  return remoteAssetPattern.test(readFileSync(path, "utf8"));
-});
-
-if (remaining.length > 0) {
-  throw new Error(`Porsche CDN references remain in: ${remaining.join(", ")}`);
+export function replaceRemoteUrls(content) {
+  return content
+    .replace(remoteAssetPattern, (url) => localUrlFor(url))
+    .replace(relativeAssetPattern, (match, quote, reference) => {
+      if (!reference.startsWith("/porsche-design-system/")) return match;
+      return `${quote}${localCdnBase}${reference}${quote}`;
+    });
 }
 
-console.log(
-  `[self-host] Mirrored ${downloaded.size} Porsche Design System assets under ${localCdnBase}.`
-);
+async function main() {
+  if (!statSync(outputDirectory).isDirectory()) {
+    throw new Error(`Build output does not exist: ${outputDirectory}`);
+  }
+
+  const buildFiles = walk(outputDirectory);
+  const pending = new Set();
+
+  for (const path of buildFiles) {
+    if (!isTextFile(path)) continue;
+    const content = readFileSync(path, "utf8");
+    for (const url of referencedRemoteUrls(content)) {
+      if (!localOverrideFor(url)) pending.add(url);
+    }
+  }
+
+  const downloaded = new Set();
+
+  while (pending.size > 0) {
+    const batch = [...pending].filter((url) => !downloaded.has(url));
+    pending.clear();
+
+    await Promise.all(
+      batch.map(async (remoteUrl) => {
+        const response = await fetch(remoteUrl);
+        if (!response.ok) {
+          throw new Error(`Unable to download ${remoteUrl}: HTTP ${response.status}`);
+        }
+
+        const path = localPathFor(remoteUrl);
+        const contentType = response.headers.get("content-type") ?? "";
+        const bytes = Buffer.from(await response.arrayBuffer());
+        mkdirSync(dirname(path), { recursive: true });
+
+        if (isTextFile(path, contentType)) {
+          const content = bytes.toString("utf8");
+          for (const url of referencedRemoteUrls(content, remoteUrl)) {
+            if (!downloaded.has(url) && !localOverrideFor(url)) pending.add(url);
+          }
+          writeFileSync(path, replaceRemoteUrls(content), "utf8");
+        } else {
+          writeFileSync(path, bytes);
+        }
+
+        downloaded.add(remoteUrl);
+      })
+    );
+  }
+
+  for (const path of buildFiles) {
+    if (!isTextFile(path)) continue;
+    const content = readFileSync(path, "utf8");
+    writeFileSync(path, replaceRemoteUrls(content), "utf8");
+  }
+
+  const remaining = walk(outputDirectory).filter((path) => {
+    if (!isTextFile(path)) return false;
+    remoteAssetPattern.lastIndex = 0;
+    return remoteAssetPattern.test(readFileSync(path, "utf8"));
+  });
+
+  if (remaining.length > 0) {
+    throw new Error(`Porsche CDN references remain in: ${remaining.join(", ")}`);
+  }
+
+  console.log(
+    `[self-host] Mirrored ${downloaded.size} Porsche Design System assets under ${localCdnBase}.`
+  );
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
+}

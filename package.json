@@ -8,7 +8,8 @@
     "brand:check": "node scripts/check-brand-assets.mjs",
     "dev": "techradar dev",
     "build": "techradar build && node scripts/self-host-pds-assets.mjs",
-    "validate": "npm run brand:check && techradar validate",
+    "test:self-host": "node --test scripts/self-host-pds-assets.test.mjs",
+    "validate": "npm run brand:check && npm run test:self-host && techradar validate",
     "postinstall": "node scripts/patch-techradar-paths.mjs"
   },
   "dependencies": {
