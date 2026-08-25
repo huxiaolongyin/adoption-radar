@@ -50,6 +50,7 @@ test("mirrors only rendered component entries from the component loader", () => 
   const dependencies = new Set([
     "https://cdn.ui.porsche.com/porsche-design-system/components/p-link-pure.entry.js",
     "https://cdn.ui.porsche.com/porsche-design-system/components/p-input-tel.entry.js",
+    "https://cdn.ui.porsche.com/porsche-design-system/components/p-text-list_2.entry.js",
     "https://cdn.ui.porsche.com/porsche-design-system/components/chunk-runtime.js",
   ]);
 

@@ -17,7 +17,7 @@ const remoteAssetPattern =
 const relativeAssetPattern =
   /(["'`])((?:\.\.?\/|\/porsche-design-system\/)[^"'`\\\s?#]+\.(?:css|js|json|map|svg|woff2?|png|ico|webmanifest)(?:[?#][^"'`]*)?)\1/g;
 const renderedComponentPattern = /<(p-[a-z][a-z0-9-]+)\b/g;
-const componentEntryPattern = /^p-[a-z][a-z0-9-]+\.entry\.js$/;
+const componentEntryPattern = /^(p-[a-z][a-z0-9-]+)(?:_\d+)?\.entry\.js$/;
 const textExtensions = new Set([
   ".css",
   ".html",
@@ -107,8 +107,9 @@ export function dependenciesToMirror(urls, sourceUrl, renderedComponents) {
   return new Set(
     [...urls].filter((url) => {
       const filename = filenameFor(url);
-      if (!componentEntryPattern.test(filename)) return true;
-      return renderedComponents.has(filename.replace(/\.entry\.js$/, ""));
+      const componentEntry = filename.match(componentEntryPattern);
+      if (!componentEntry) return true;
+      return renderedComponents.has(componentEntry[1]);
     })
   );
 }
