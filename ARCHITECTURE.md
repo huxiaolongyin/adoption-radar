@@ -47,7 +47,7 @@ flowchart LR
 3. `build` 调用上游静态构建，然后运行 `scripts/self-host-pds-assets.mjs`。
 4. `brand:generate` 与 `brand:check` 分别生成和验证项目品牌资产。
 
-静态构建首先写入 `build/`。后处理脚本从页面中的 Porsche Design System CDN 引用出发，递归解析已下载资源的相对依赖，将完整资源闭包复制到 `build/_vendor/` 并改写为站点同源 URL；这也覆盖链接等按需加载的 Web Component。favicon、应用图标和分享图使用本项目资源替代对应的远程元资源。
+静态构建首先写入 `build/`。后处理脚本从页面中的 Porsche Design System CDN 引用出发，识别静态 HTML 实际渲染的 Web Component，并递归解析这些组件的相对依赖；所需资源复制到 `build/_vendor/` 并改写为站点同源 URL，未使用的可选组件不进入发布构件。favicon、应用图标和分享图使用本项目资源替代对应的远程元资源。
 
 `.techradar/` 是上游 CLI 创建的影子构建工作区，`build/` 是最终静态产物。二者均为可再生状态，不进入版本控制。
 

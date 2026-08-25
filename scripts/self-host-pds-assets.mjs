@@ -16,6 +16,8 @@ const remoteAssetPattern =
   /https:\/\/cdn\.ui\.porsche\.(?:com|cn)\/porsche-design-system\/[^\s"'`()<>\\]+/g;
 const relativeAssetPattern =
   /(["'`])((?:\.\.?\/|\/porsche-design-system\/)[^"'`\\\s?#]+\.(?:css|js|json|map|svg|woff2?|png|ico|webmanifest)(?:[?#][^"'`]*)?)\1/g;
+const renderedComponentPattern = /<(p-[a-z][a-z0-9-]+)\b/g;
+const componentEntryPattern = /^p-[a-z][a-z0-9-]+\.entry\.js$/;
 const textExtensions = new Set([
   ".css",
   ".html",
@@ -81,6 +83,36 @@ function isPorscheAssetUrl(url) {
   );
 }
 
+function filenameFor(remoteUrl) {
+  return new URL(remoteUrl).pathname.split("/").at(-1) ?? "";
+}
+
+function isComponentLoader(remoteUrl) {
+  return /^porsche-design-system(?:\.[a-z0-9]+)*\.js$/i.test(
+    filenameFor(remoteUrl)
+  );
+}
+
+export function renderedComponentNames(content) {
+  return new Set(
+    [...content.matchAll(new RegExp(renderedComponentPattern.source, "g"))].map(
+      (match) => match[1]
+    )
+  );
+}
+
+export function dependenciesToMirror(urls, sourceUrl, renderedComponents) {
+  if (!isComponentLoader(sourceUrl)) return new Set(urls);
+
+  return new Set(
+    [...urls].filter((url) => {
+      const filename = filenameFor(url);
+      if (!componentEntryPattern.test(filename)) return true;
+      return renderedComponents.has(filename.replace(/\.entry\.js$/, ""));
+    })
+  );
+}
+
 export function referencedRemoteUrls(content, sourceUrl) {
   const urls = new Set(content.match(remoteAssetPattern) ?? []);
   if (!sourceUrl) return urls;
@@ -111,10 +143,16 @@ async function main() {
 
   const buildFiles = walk(outputDirectory);
   const pending = new Set();
+  const renderedComponents = new Set();
 
   for (const path of buildFiles) {
     if (!isTextFile(path)) continue;
     const content = readFileSync(path, "utf8");
+    if (extname(path).toLowerCase() === ".html") {
+      for (const component of renderedComponentNames(content)) {
+        renderedComponents.add(component);
+      }
+    }
     for (const url of referencedRemoteUrls(content)) {
       if (!localOverrideFor(url)) pending.add(url);
     }
@@ -140,7 +178,12 @@ async function main() {
 
         if (isTextFile(path, contentType)) {
           const content = bytes.toString("utf8");
-          for (const url of referencedRemoteUrls(content, remoteUrl)) {
+          const dependencies = dependenciesToMirror(
+            referencedRemoteUrls(content, remoteUrl),
+            remoteUrl,
+            renderedComponents
+          );
+          for (const url of dependencies) {
             if (!downloaded.has(url) && !localOverrideFor(url)) pending.add(url);
           }
           writeFileSync(path, replaceRemoteUrls(content), "utf8");

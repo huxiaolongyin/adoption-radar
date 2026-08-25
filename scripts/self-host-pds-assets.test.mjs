@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  dependenciesToMirror,
   referencedRemoteUrls,
+  renderedComponentNames,
   replaceRemoteUrls,
 } from "./self-host-pds-assets.mjs";
 
@@ -32,6 +34,47 @@ test("ignores relative dependencies outside the Porsche asset tree", () => {
   assert.deepEqual(
     [...referencedRemoteUrls('import "./p-link-pure.entry.js";', sourceUrl)],
     []
+  );
+});
+
+test("discovers Porsche components rendered in static HTML", () => {
+  assert.deepEqual(
+    [...renderedComponentNames("<p-link-pure></p-link-pure><p-icon />")],
+    ["p-link-pure", "p-icon"]
+  );
+});
+
+test("mirrors only rendered component entries from the component loader", () => {
+  const sourceUrl =
+    "https://cdn.ui.porsche.com/porsche-design-system/components/porsche-design-system.v4.6.0.js";
+  const dependencies = new Set([
+    "https://cdn.ui.porsche.com/porsche-design-system/components/p-link-pure.entry.js",
+    "https://cdn.ui.porsche.com/porsche-design-system/components/p-input-tel.entry.js",
+    "https://cdn.ui.porsche.com/porsche-design-system/components/chunk-runtime.js",
+  ]);
+
+  assert.deepEqual(
+    [...dependenciesToMirror(dependencies, sourceUrl, new Set(["p-link-pure"]))],
+    [
+      "https://cdn.ui.porsche.com/porsche-design-system/components/p-link-pure.entry.js",
+      "https://cdn.ui.porsche.com/porsche-design-system/components/chunk-runtime.js",
+    ]
+  );
+});
+
+test("keeps transitive dependencies outside the component loader", () => {
+  const dependency =
+    "https://cdn.ui.porsche.com/porsche-design-system/components/chunk-runtime.js";
+
+  assert.deepEqual(
+    [
+      ...dependenciesToMirror(
+        new Set([dependency]),
+        "https://cdn.ui.porsche.com/porsche-design-system/components/p-link-pure.entry.js",
+        new Set()
+      ),
+    ],
+    [dependency]
   );
 });
 
