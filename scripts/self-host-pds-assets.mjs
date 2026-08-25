@@ -122,6 +122,7 @@ export function referencedRemoteUrls(content, sourceUrl) {
     new RegExp(relativeAssetPattern.source, relativeAssetPattern.flags)
   );
   for (const match of matches) {
+    if (match[2].includes("${")) continue;
     const resolved = new URL(match[2], sourceUrl);
     if (isPorscheAssetUrl(resolved)) urls.add(resolved.href);
   }

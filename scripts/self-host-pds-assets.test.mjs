@@ -37,6 +37,16 @@ test("ignores relative dependencies outside the Porsche asset tree", () => {
   );
 });
 
+test("ignores runtime-generated component paths", () => {
+  const sourceUrl =
+    "https://cdn.ui.porsche.com/porsche-design-system/components/main.js";
+
+  assert.deepEqual(
+    [...referencedRemoteUrls('import(`./${i}.entry.js`);', sourceUrl)],
+    []
+  );
+});
+
 test("discovers Porsche components rendered in static HTML", () => {
   assert.deepEqual(
     [...renderedComponentNames("<p-link-pure></p-link-pure><p-icon />")],
