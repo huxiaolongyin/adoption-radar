@@ -18,6 +18,8 @@ const relativeAssetPattern =
   /(["'`])((?:\.\.?\/|\/porsche-design-system\/)[^"'`\\\s?#]+\.(?:css|js|json|map|svg|woff2?|png|ico|webmanifest)(?:[?#][^"'`]*)?)\1/g;
 const renderedComponentPattern = /<(p-[a-z][a-z0-9-]+)\b/g;
 const componentEntryPattern = /^(p-[a-z][a-z0-9-]+)(?:_\d+)?\.entry\.js$/;
+const componentChunkHashPattern =
+  /"?([a-z][a-z0-9-]*)"?:"([a-f0-9]{20})"/g;
 const textExtensions = new Set([
   ".css",
   ".html",
@@ -101,17 +103,41 @@ export function renderedComponentNames(content) {
   );
 }
 
-export function dependenciesToMirror(urls, sourceUrl, renderedComponents) {
+export function dependenciesToMirror(urls, sourceUrl) {
   if (!isComponentLoader(sourceUrl)) return new Set(urls);
 
   return new Set(
     [...urls].filter((url) => {
       const filename = filenameFor(url);
-      const componentEntry = filename.match(componentEntryPattern);
-      if (!componentEntry) return true;
-      return renderedComponents.has(componentEntry[1]);
+      return !componentEntryPattern.test(filename);
     })
   );
+}
+
+export function renderedComponentChunkUrls(
+  content,
+  sourceUrl,
+  renderedComponents
+) {
+  if (!isComponentLoader(sourceUrl)) return new Set();
+
+  const chunkHashes = new Map(
+    [...content.matchAll(new RegExp(componentChunkHashPattern.source, "g"))].map(
+      (match) => [match[1], match[2]]
+    )
+  );
+  const urls = new Set();
+
+  for (const component of renderedComponents) {
+    const chunkName = component.replace(/^p-/, "");
+    const hash = chunkHashes.get(chunkName);
+    if (!hash) continue;
+    urls.add(
+      new URL(`./porsche-design-system.${chunkName}.${hash}.js`, sourceUrl).href
+    );
+  }
+
+  return urls;
 }
 
 export function referencedRemoteUrls(content, sourceUrl) {
@@ -182,9 +208,15 @@ async function main() {
           const content = bytes.toString("utf8");
           const dependencies = dependenciesToMirror(
             referencedRemoteUrls(content, remoteUrl),
+            remoteUrl
+          );
+          for (const url of renderedComponentChunkUrls(
+            content,
             remoteUrl,
             renderedComponents
-          );
+          )) {
+            dependencies.add(url);
+          }
           for (const url of dependencies) {
             if (!downloaded.has(url) && !localOverrideFor(url)) pending.add(url);
           }
